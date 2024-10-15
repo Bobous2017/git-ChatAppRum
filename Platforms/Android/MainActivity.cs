@@ -8,4 +8,5 @@ namespace ChatAppRum
     public class MainActivity : MauiAppCompatActivity
     {
     }
+
 }
