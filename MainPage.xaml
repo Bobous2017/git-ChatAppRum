@@ -2,41 +2,44 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChatAppRum.MainPage"
              Title="">
-    <Frame  VerticalOptions="Center" HorizontalOptions="Center" Padding="0" BackgroundColor="DarkBlue" CornerRadius="28" IsClippedToBounds="True" Margin="20,200,20,240">
-        <ScrollView  BackgroundColor="AliceBlue" Margin="0,-50,0,0" >
-        
-        <StackLayout >
-        
-                <!-- Add the logo image here -->
-            <Image Source="logo.png"
-               HeightRequest="200" 
-               WidthRequest="200" 
-               Margin="0,20,0,0"
-               HorizontalOptions="Center" />
+    <StackLayout BackgroundColor="#B9D9EB">
+        <Frame  VerticalOptions="Center" HorizontalOptions="Center" Padding="0" BackgroundColor="DarkBlue" CornerRadius="20" IsClippedToBounds="True" Margin="20,200,20,220">
+            <ScrollView  BackgroundColor="AliceBlue" Margin="0,-50,0,0" >
+                <StackLayout >
 
-            <Label Text="Chat App"
-               FontSize="24"
-                   Margin="0,-30,0,0"
-               HorizontalOptions="Center" />
+                    <!-- Add the logo image here -->
+                    <Image Source="logo.png"
+                   HeightRequest="200" 
+                   WidthRequest="200" 
+                   Margin="0,20,0,0"
+                   HorizontalOptions="Center" />
 
-            <Button Text="Login with Google"
-                x:Name="GoogleLoginButton"
-                Clicked="OnGoogleLoginClicked"
-                WidthRequest="200"
-                Margin="0,40,0,0"
-                BackgroundColor="BlanchedAlmond"
-                TextColor="Black"
-                HorizontalOptions="Center" />
+                    <Label Text="Chat App"
+                   FontSize="24"
+                       Margin="0,-30,0,0"
+                    TextColor="Black"
+                   
+                   HorizontalOptions="Center" />
 
-
-            <Button Text="Logout" 
-                    Clicked="OnLogoutClicked" 
-                     WidthRequest="200"
+                    <Button Text="Login with Google"
+                    x:Name="GoogleLoginButton"
+                    Clicked="OnGoogleLoginClicked"
+                    WidthRequest="200"
                     Margin="0,10,0,0"
-                    BackgroundColor="AliceBlue"
-                    TextColor="red"/>
-        </StackLayout>
-        
-    </ScrollView>
-    </Frame>
+                    BackgroundColor="BlanchedAlmond"
+                    TextColor="Black"
+                    HorizontalOptions="Center" />
+
+
+                    <Button Text="Logout" 
+                        Clicked="OnLogoutClicked" 
+                         WidthRequest="200"
+                        Margin="0,0,0,0"
+                        BackgroundColor="AliceBlue"
+                        TextColor="red"/>
+                </StackLayout>
+
+            </ScrollView>
+        </Frame>
+    </StackLayout>
 </ContentPage>

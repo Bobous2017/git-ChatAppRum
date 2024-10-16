@@ -3,10 +3,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChatAppRum.ChatRoomOverviewPage"
              Title="ChatRoomOverviewPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to ChatRoom!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <StackLayout BackgroundColor="#4D516D">
+        <!-- Wrap the CollectionView in a RefreshView and bind IsRefreshing -->
+    <RefreshView x:Name="ChatRoomsRefreshView"
+                 Command="{Binding RefreshCommand}"
+                 VerticalOptions="FillAndExpand"
+                 HorizontalOptions="FillAndExpand">
+        <CollectionView ItemsSource="{Binding ChatRooms}" 
+                        SelectionMode="Single" 
+                        SelectionChanged="OnRoomSelected"
+                        VerticalOptions="FillAndExpand"
+                        HorizontalOptions="FillAndExpand">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="10" ColumnDefinitions="*,Auto">
+                        <!-- Chat room name and description -->
+                        <StackLayout Grid.Column="0" HorizontalOptions="StartAndExpand">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding Description}" FontSize="Small" TextColor="Grey"/>
+                        </StackLayout>
+
+                        <!-- Chevron right icon -->
+                        <Image Source="chevron_right_icon.png" 
+                               Grid.Column="1" 
+                               HeightRequest="24" 
+                               WidthRequest="24" 
+                               
+                               BackgroundColor="LightGray"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
+    </StackLayout>
+
 </ContentPage>
