@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Auth0.OidcClient;
-using IdentityModel.OidcClient;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage; // Required for SecureStorage
 
 namespace ChatAppRum
 {
@@ -23,17 +23,43 @@ namespace ChatAppRum
                 PostLogoutRedirectUri = "myapp://callback",
                 Scope = "openid profile email"
             });
+
+            // Check if the user is already logged in
+            CheckLoginStatus();
+        }
+
+        private async void CheckLoginStatus()
+        {
+            // Check if a token already exists
+            var accessToken = await SecureStorage.GetAsync("access_token");
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                // If a token exists, navigate directly to the chat room overview page
+                await Navigation.PushAsync(new ChatRoomOverviewPage());
+            }
         }
 
         private async void OnGoogleLoginClicked(object sender, EventArgs e)
         {
             try
             {
-                // Pass 'prompt=login' via extra parameters
+                // Check if a token already exists
+                var existingToken = await SecureStorage.GetAsync("access_token");
+                if (!string.IsNullOrEmpty(existingToken))
+                {
+                    // If token exists, navigate directly to the chat room overview page
+                    await Navigation.PushAsync(new ChatRoomOverviewPage());
+                    return; // Skip login as token is valid
+                }
+
+                // If no token exists, proceed with Auth0 login
                 var loginResult = await _auth0Client.LoginAsync(new { prompt = "login" });
 
                 if (!loginResult.IsError)
                 {
+                    // Save the token securely
+                    await SecureStorage.SetAsync("access_token", loginResult.AccessToken);
+
                     // On successful login, navigate to the chat room overview
                     await Navigation.PushAsync(new ChatRoomOverviewPage());
                 }
@@ -49,14 +75,13 @@ namespace ChatAppRum
             }
         }
 
-
         private async void OnLogoutClicked(object sender, EventArgs e)
         {
             try
             {
                 await _auth0Client.LogoutAsync();
 
-                // Clear any stored tokens using SecureStorage.RemoveAsync
+                // Clear any stored tokens using SecureStorage
                 SecureStorage.Remove("access_token");
 
                 await DisplayAlert("Logged Out", "You have been logged out successfully.", "OK");
@@ -66,7 +91,5 @@ namespace ChatAppRum
                 await DisplayAlert("Logout Error", $"An error occurred during logout: {ex.Message}", "OK");
             }
         }
-
-
     }
 }
