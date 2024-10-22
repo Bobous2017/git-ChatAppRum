@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChatAppRum.RoomPage"
+             Title="RoomPage">
+    <StackLayout BackgroundColor="#4D516D">
+        <!-- Wrap the CollectionView in a RefreshView and bind IsRefreshing -->
+        <RefreshView x:Name="RoomsRefreshView"
+                     Command="{Binding RefreshCommand}"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     VerticalOptions="FillAndExpand"
+                     HorizontalOptions="FillAndExpand">
+            <CollectionView ItemsSource="{Binding Rooms}" 
+                            SelectionMode="None" 
+                            VerticalOptions="FillAndExpand"
+                            HorizontalOptions="FillAndExpand">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Reveal">
+                                    
+                                    <SwipeItem Text="Update" 
+                                               BackgroundColor="Orange" 
+                                               Command="{Binding Path=BindingContext.UpdateRoomCommand, Source={x:Reference RoomsRefreshView}}" 
+                                               CommandParameter="{Binding .}"/>
+                                    <SwipeItem Text="Delete" 
+                                               BackgroundColor="Red" 
+                                               Command="{Binding Path=BindingContext.DeleteRoomCommand, Source={x:Reference RoomsRefreshView}}" 
+                                               CommandParameter="{Binding .}"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid Padding="10" ColumnDefinitions="*,Auto">
+
+                                <!-- Navigate to a specific room -->
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnRoomTapped" CommandParameter="{Binding .}"/>
+                                </Grid.GestureRecognizers>
+
+
+                                <!-- Chat room name and description -->
+                                <StackLayout Grid.Column="0" HorizontalOptions="StartAndExpand">
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Description}" FontSize="Small" TextColor="Grey"/>
+                                </StackLayout>
+
+                                <!-- Chevron right icon -->
+                                <Image Source="chevron_right_icon.png" 
+                                       Grid.Column="1" 
+                                       HeightRequest="24" 
+                                       WidthRequest="24" 
+                                       BackgroundColor="LightGray"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+        <!-- Button to create a new room -->
+        <Button Text="Create New Room"
+                Command="{Binding CreateRoomCommand}"
+                VerticalOptions="End"
+                Margin="10" />
+    </StackLayout>
+</ContentPage>

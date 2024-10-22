@@ -1,0 +1,64 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChatAppRum.MessagePage"
+             Title="{Binding Name}">
+    <ScrollView>
+        <StackLayout>
+            <!-- Room Name Displayed at the Top -->
+            <Label Text="{Binding RoomName}" 
+                   FontAttributes="Bold" 
+                   FontSize="Large"
+                   HorizontalOptions="Center"
+                   TextColor="White" />
+            <!-- Messages List -->
+            <CollectionView x:Name="MessagesCollection"
+                            ItemsSource="{Binding Messages}"
+                            SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Update"
+                                               BackgroundColor="Orange"
+                                               Command="{Binding Path=BindingContext.UpdateMessageCommand, Source={x:Reference MessagesCollection}}"
+                                               CommandParameter="{Binding .}" />
+                                    <SwipeItem Text="Delete"
+                                               BackgroundColor="Red"
+                                               Command="{Binding Path=BindingContext.DeleteMessageCommand, Source={x:Reference MessagesCollection}}"
+                                               CommandParameter="{Binding .}" />
+                                    <SwipeItem Text="Send"
+                                               BackgroundColor="Blue"
+                                               Command="{Binding Path=BindingContext.SendToAnotherRoomCommand, Source={x:Reference MessagesCollection}}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Frame Padding="10" Margin="5" HasShadow="True" CornerRadius="10">
+
+                                <StackLayout>
+                                    
+                                    <Label Text="{Binding SenderName}" FontAttributes="Bold"  TextColor="Green"/>
+                                    <Label Text="{Binding Text}" TextColor="Orange"/>
+                                    <Label Text="{Binding Timestamp}" FontSize="10" TextColor="Gray" HorizontalOptions="End" />
+                                </StackLayout>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Message Input -->
+            <Grid Padding="10">
+                <Entry x:Name="MessageInput"
+                       Placeholder="Type your message here..."
+                       HorizontalOptions="FillAndExpand"
+                       Focused="OnMessageInputFocused"/>
+                
+                <Button Text="Add"
+                        Clicked="OnCreateMessage"
+                        HorizontalOptions="End" />
+            </Grid>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,4 +1,5 @@
 ﻿using Auth0.OidcClient;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ChatAppRum
 {
@@ -10,6 +11,7 @@ namespace ChatAppRum
             InitializeComponent();
 
             MainPage = new AppShell();
+           // MainPage = serviceProvider.GetRequiredService<AppShell>();
         }
     }
 }
