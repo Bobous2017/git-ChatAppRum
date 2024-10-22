@@ -1,7 +1,7 @@
 ﻿<?xml version = "1.0" encoding = "UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:ChatAppRum"
+             xmlns:model="clr-namespace:ChatAppRum.Model"
              x:Class="ChatAppRum.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -9,6 +9,11 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+
+            <!-- Correctly reference the converters -->
+            <!--<model:SentMessageAlignmentConverter x:Key="SentMessageAlignmentConverter" />
+            <model:MessageBackgroundColorConverter x:Key="MessageBackgroundColorConverter" />-->
         </ResourceDictionary>
     </Application.Resources>
 </Application>

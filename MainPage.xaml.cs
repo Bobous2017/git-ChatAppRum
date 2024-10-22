@@ -1,18 +1,29 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Auth0.OidcClient;
+using ChatRumDataAccess;  // Import your SqliteDataAccess class
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage; // Required for SecureStorage
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ChatAppRum
 {
     public partial class MainPage : ContentPage
     {
         private readonly Auth0Client _auth0Client;
+        //private readonly HubConnection _hubConnection;
+        //private readonly SqliteDataAccess _sqliteDataAccess;
+        private readonly HttpClient _httpClient;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MainPage()
+        // Update constructor to accept IServiceProvider along with other dependencies
+        public MainPage(IServiceProvider serviceProvider, /*HubConnection hubConnection,*/ HttpClient httpClient)
         {
             InitializeComponent();
+            _serviceProvider = serviceProvider;
+            //_hubConnection = hubConnection;
+            _httpClient = httpClient;
 
             // Initialize Auth0 client with your domain and client ID
             _auth0Client = new Auth0Client(new Auth0ClientOptions
@@ -34,8 +45,9 @@ namespace ChatAppRum
             var accessToken = await SecureStorage.GetAsync("access_token");
             if (!string.IsNullOrEmpty(accessToken))
             {
-                // If a token exists, navigate directly to the chat room overview page
-                await Navigation.PushAsync(new ChatRoomOverviewPage());
+                // If a token exists, navigate directly to the chat room overview page using IServiceProvider to get RoomPage instance
+                var roomPage = _serviceProvider.GetRequiredService<RoomPage>();
+                await Navigation.PushAsync(roomPage);
             }
         }
 
@@ -48,7 +60,8 @@ namespace ChatAppRum
                 if (!string.IsNullOrEmpty(existingToken))
                 {
                     // If token exists, navigate directly to the chat room overview page
-                    await Navigation.PushAsync(new ChatRoomOverviewPage());
+                    var roomPage = _serviceProvider.GetRequiredService<RoomPage>();
+                    await Navigation.PushAsync(roomPage);
                     return; // Skip login as token is valid
                 }
 
@@ -61,7 +74,8 @@ namespace ChatAppRum
                     await SecureStorage.SetAsync("access_token", loginResult.AccessToken);
 
                     // On successful login, navigate to the chat room overview
-                    await Navigation.PushAsync(new ChatRoomOverviewPage());
+                    var roomPage = _serviceProvider.GetRequiredService<RoomPage>();
+                    await Navigation.PushAsync(roomPage);
                 }
                 else
                 {

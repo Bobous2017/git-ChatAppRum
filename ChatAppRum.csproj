@@ -69,20 +69,49 @@
 
 	<ItemGroup>
 		<PackageReference Include="Auth0.OidcClient.MAUI" Version="1.0.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0-rc.2.24473.5" />
 		<PackageReference Include="Microsoft.Identity.Client" Version="4.65.3-preview" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.21" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+	</ItemGroup>
+
+
+
+	
+
+	<ItemGroup>
+	  <ProjectReference Include="..\ChatRumDataAccess\ChatRumDataAccess.csproj" />
+	  <ProjectReference Include="..\ChatRumLibrary\ChatRumLibrary.csproj" />
+	</ItemGroup>
+
+
+
+	
+
+	<ItemGroup>
+	  <Compile Update="MessagePage.xaml.cs">
+	    <DependentUpon>MessagePage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="RoomPage.xaml.cs">
+	    <DependentUpon>RoomPage.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="ChatRoomOverviewPage.xaml">
+	  <MauiXaml Update="RoomPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="ChatRoomPage.xaml">
+	  <MauiXaml Update="MessagePage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
+
+	<ProjectExtensions><VisualStudio><UserProperties XamarinHotReloadDebuggerTimeoutExceptionChatAppRumHideInfoBar="True" XamarinHotReloadGenericExceptionInfoBarChatAppRumHideInfoBar="True" /></VisualStudio></ProjectExtensions>
 
 </Project>
