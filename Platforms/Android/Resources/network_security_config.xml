@@ -1,7 +1,7 @@
 <network-security-config>
 	<domain-config cleartextTrafficPermitted="false">
 		<!--<domain includeSubdomains="true">192.168.0.12</domain>--> <!--hjem !-->
-		<domain includeSubdomains="true">172.16.3.68</domain>
+		<domain includeSubdomains="true">172.16.3.36</domain>
 		<trust-anchors>
 			<certificates src="system" />
 			<certificates src="user" />
