@@ -112,6 +112,6 @@
 	  </MauiXaml>
 	</ItemGroup>
 
-	<ProjectExtensions><VisualStudio><UserProperties XamarinHotReloadDebuggerTimeoutExceptionChatAppRumHideInfoBar="True" XamarinHotReloadGenericExceptionInfoBarChatAppRumHideInfoBar="True" /></VisualStudio></ProjectExtensions>
+	<ProjectExtensions><VisualStudio><UserProperties XamarinHotReloadDebuggerTimeoutExceptionChatAppRumHideInfoBar="True" XamarinHotReloadGenericExceptionInfoBarChatAppRumHideInfoBar="True" XamarinHotReloadUnhandledDeviceExceptionChatAppRumHideInfoBar="True" /></VisualStudio></ProjectExtensions>
 
 </Project>

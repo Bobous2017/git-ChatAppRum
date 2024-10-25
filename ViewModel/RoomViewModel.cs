@@ -221,5 +221,60 @@ namespace ChatAppRum.ViewModel
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public ICommand ChangeProfilePictureCommand => new Command<Room>(async (room) =>
+        {
+            if (room == null) return;
+
+            var result = await FilePicker.PickAsync(new PickOptions
+            {
+                FileTypes = FilePickerFileType.Images,
+                PickerTitle = "Pick a profile picture"
+            });
+
+            if (result != null)
+            {
+                // Update the profile image in the room object
+                room.ProfileImageRoom = result.FullPath;
+
+                // Re-assign the updated room to ensure UI refresh
+                var index = Rooms.IndexOf(room);
+                if (index >= 0)
+                {
+                    Rooms[index] = null;  // Set to null to temporarily break the binding
+                    Rooms[index] = room;   // Assign the updated object to trigger UI refresh
+                }
+
+                // Persist the changes in the database
+                try
+                {
+                    var response = await _httpClient.PutAsJsonAsync($"api/Room/room_update/{room.Id}", room);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"[ERROR] Failed to update room profile image. Server response: {response.ReasonPhrase}");
+                    }
+                    else
+                    {
+                        // Update the room in the Rooms collection manually
+                        var updatedRoom = Rooms.FirstOrDefault(r => r.Id == room.Id);
+                        if (updatedRoom != null)
+                        {
+                            updatedRoom.ProfileImageRoom = room.ProfileImageRoom;
+                            updatedRoom.Name = room.Name;
+                            updatedRoom.Description = room.Description;
+                            // Manually trigger a UI refresh
+                            OnPropertyChanged(nameof(Rooms));
+                        }
+                        Console.WriteLine("[DOTNET] Room profile picture updated successfully.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ERROR] Failed to update room profile picture: {ex.Message}");
+                }
+            }
+        });
+
+
     }
 }

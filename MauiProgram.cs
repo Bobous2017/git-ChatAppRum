@@ -82,6 +82,7 @@ namespace ChatAppRum
             builder.Services.AddSingleton<HttpClient>();
 
             builder.Services.AddTransient<RoomViewModel>();
+            builder.Services.AddTransient<MessageViewModel>();
             //builder.Services.AddSingleton<ChatRoomService>();
 
             //builder.Services.AddSingleton<SqliteDataAccess>();

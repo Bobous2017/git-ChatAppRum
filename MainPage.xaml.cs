@@ -73,6 +73,42 @@ namespace ChatAppRum
                     // Save the token securely
                     await SecureStorage.SetAsync("access_token", loginResult.AccessToken);
 
+                    // Extract and store the user's email address using ClaimsPrincipal
+                    if (loginResult.User is not null)
+                    {
+                        //var emailClaim = loginResult.User.FindFirst(c => c.Type == "email")?.Value; // use only email name
+
+                        // Try to get a shorter username or nickname from the loginResult
+                        var nameClaim = loginResult.User.FindFirst(c => c.Type == "nickname")?.Value
+                                ?? loginResult.User.FindFirst(c => c.Type == "given_name")?.Value
+                                ?? loginResult.User.FindFirst(c => c.Type == "name")?.Value;
+
+                        if (!string.IsNullOrEmpty(nameClaim))
+                        {
+                            await SecureStorage.SetAsync("user_name", nameClaim);
+                            Console.WriteLine($"[DEBUG] User name retrieved and saved: {nameClaim}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEBUG] User name or nickname claim not found.");
+                            await DisplayAlert("Error", "User name or nickname not found. Please check Auth0 configuration.", "OK");
+                        }
+
+                        // Retrieve and store the user's profile picture URL
+                        var pictureClaim = loginResult.User.FindFirst(c => c.Type == "picture")?.Value;
+
+                        if (!string.IsNullOrEmpty(pictureClaim))
+                        {
+                            await SecureStorage.SetAsync("user_profile_picture", pictureClaim);
+                            Console.WriteLine($"[DEBUG] User profile picture URL retrieved and saved: {pictureClaim}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEBUG] User profile picture claim not found.");
+                            await DisplayAlert("Error", "User profile picture not found. Please check Auth0 configuration.", "OK");
+                        }
+                    }
+
                     // On successful login, navigate to the chat room overview
                     var roomPage = _serviceProvider.GetRequiredService<RoomPage>();
                     await Navigation.PushAsync(roomPage);
@@ -88,6 +124,7 @@ namespace ChatAppRum
                 await DisplayAlert("Login Error", $"An error occurred during login: {ex.Message}", "OK");
             }
         }
+
 
         private async void OnLogoutClicked(object sender, EventArgs e)
         {

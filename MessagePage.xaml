@@ -4,12 +4,38 @@
              Title="{Binding Name}">
     <ScrollView>
         <StackLayout>
-            <!-- Room Name Displayed at the Top -->
-            <Label Text="{Binding RoomName}" 
-                   FontAttributes="Bold" 
-                   FontSize="Large"
-                   HorizontalOptions="Center"
-                   TextColor="White" />
+            <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Start" Spacing="10" Margin="10">
+                <!-- User Profile Picture -->
+                <Frame HeightRequest="50"
+                       WidthRequest="50"
+                       CornerRadius="25" Padding="0"
+                       IsClippedToBounds="True">
+                    <Image Source="{Binding UserProfilePicture}"
+                           HeightRequest="50"
+                           WidthRequest="50"
+                           Aspect="AspectFill" />
+                </Frame>
+                <!-- Room Name -->
+                <Label Text="{Binding RoomName}"
+                       FontAttributes="Bold"
+                       FontSize="Large"
+                       VerticalOptions="Center"
+                       TextColor="White"
+                       Margin="140, 0, 0, 0"/>
+                <!-- Room Profile Picture -->
+                <Frame HeightRequest="40"
+                        WidthRequest="40"
+                        CornerRadius="20"
+                        Padding="0"
+                        IsClippedToBounds="True">
+                    <Image Source="{Binding RoomProfil, TargetNullValue='default_avatar.png'}"
+                        HeightRequest="40"
+                        WidthRequest="40"
+                        Aspect="AspectFill" />   
+                </Frame>
+
+                
+            </HorizontalStackLayout>
             <!-- Messages List -->
             <CollectionView x:Name="MessagesCollection"
                             ItemsSource="{Binding Messages}"
@@ -35,9 +61,11 @@
                             </SwipeView.RightItems>
 
                             <Frame Padding="10" Margin="5" HasShadow="True" CornerRadius="10">
+                               
 
                                 <StackLayout>
-                                    
+                                 
+                                  
                                     <Label Text="{Binding SenderName}" FontAttributes="Bold"  TextColor="Green"/>
                                     <Label Text="{Binding Text}" TextColor="Orange"/>
                                     <Label Text="{Binding Timestamp}" FontSize="10" TextColor="Gray" HorizontalOptions="End" />
@@ -49,7 +77,7 @@
             </CollectionView>
 
             <!-- Message Input -->
-            <Grid Padding="10">
+            <!--<Grid Padding="10">
                 <Entry x:Name="MessageInput"
                        Placeholder="Type your message here..."
                        HorizontalOptions="FillAndExpand"
@@ -57,8 +85,23 @@
                 
                 <Button Text="Add"
                         Clicked="OnCreateMessage"
+                        BackgroundColor="LightGray"
                         HorizontalOptions="End" />
-            </Grid>
+            </Grid>-->
+            <!-- Button to create a new room -->
+            <!-- Entry for the message input -->
+            <Entry Text="{Binding MessageText, Mode=TwoWay}"
+               Placeholder="Type your message here..."
+               HorizontalOptions="FillAndExpand"
+               VerticalOptions="End"
+               Margin="10"/>
+
+            <!-- Button to send the message -->
+            <Button Text="Add"
+                Command="{Binding CreateMessageCommand}"
+                VerticalOptions="End"
+                BackgroundColor="LightGray"
+                HorizontalOptions="End" />
         </StackLayout>
     </ScrollView>
 </ContentPage>
