@@ -4,6 +4,17 @@
              x:Class="ChatAppRum.RoomPage"
              Title="">
     <StackLayout BackgroundColor="#4D516D">
+        <!-- User Profile Picture -->
+        <Frame HeightRequest="50"
+            WidthRequest="50"
+            CornerRadius="25" Padding="0"
+            IsClippedToBounds="True">
+            <Image Source="{Binding UserProfilePicture}"
+                HeightRequest="50"
+                WidthRequest="50"
+                Aspect="AspectFill" />
+        </Frame>
+
         <Label Text="Rooms"
            FontAttributes="Bold"
            FontSize="Large"
@@ -11,6 +22,8 @@
            HorizontalOptions="Center"
            TextColor="White"
            Margin="0, 10, 0, 10"/>
+
+       
         <!-- Wrap the CollectionView in a RefreshView and bind IsRefreshing -->
         <RefreshView x:Name="RoomsRefreshView"
                      Command="{Binding RefreshCommand}"

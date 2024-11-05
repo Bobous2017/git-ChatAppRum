@@ -27,34 +27,15 @@ namespace ChatAppRum.ViewModel
         private string _userProfilePicture;
         private string _roomProfil;
         private string _roomName;
-        
-
         private string _messageText;
-        public string MessageText
-        {
-            get => _messageText;
-            set
-            {
-                if (_messageText != value)
-                {
-                    _messageText = value;
-                    OnPropertyChanged(nameof(MessageText));
-                }
-            }
-        }
-
 
         private readonly ContentPage _page; // DisplayAlert, DisplayPromptAsync, and MessageInput do not exist in the current context.
 
         // Delegate for DisplayPromptAsync
-        public Func<string, string, string, Task<string>> DisplayPromptMessage { get; set; } // OnCreateMessage
-
-        // Initialize the commands
+        //public Func<string, string, string, Task<string>> DisplayPromptMessage { get; set; } // OnCreateMessage
      
         public Command CreateMessageCommand { get; }
         
-
-
         public string UserProfilePicture
         {
             get => _userProfilePicture;
@@ -107,6 +88,19 @@ namespace ChatAppRum.ViewModel
             }
         }
 
+        public string MessageText
+        {
+            get => _messageText;
+            set
+            {
+                if (_messageText != value)
+                {
+                    _messageText = value;
+                    OnPropertyChanged(nameof(MessageText));
+                }
+            }
+        }
+
         public ObservableCollection<Message> Messages { get; set; }
 
         // Constructor
@@ -145,8 +139,6 @@ namespace ChatAppRum.ViewModel
             // Initialize commands
             CreateMessageCommand = new Command(OnCreateMessage);
 
-
-
             // Notify about the initial property values
             OnPropertyChanged(nameof(RoomName));
             OnPropertyChanged(nameof(RoomProfil));
@@ -157,6 +149,7 @@ namespace ChatAppRum.ViewModel
 
             // Start the async initialization after the constructor
             InitializeUserProfilePicture();
+
             // Connect to load messages
             LoadMessages();
         }
@@ -165,12 +158,25 @@ namespace ChatAppRum.ViewModel
         public Command<Message> UpdateMessageCommand => new Command<Message>(async (message) => await OnUpdateMessage(message));
         public Command<Message> DeleteMessageCommand => new Command<Message>(async (message) => await OnDeleteMessage(message));
         public Command<Message> SendToAnotherRoomCommand => new Command<Message>(async (message) => await OnSendToAnotherRoom(message));
-       
+        public ICommand AttachFileCommand => new Command(OnAttachFile);
+
         // Method to load messages using HTTP API
         public async Task LoadMessages()
         {
             try
             {
+                // Set userId in the headers
+                string userId = await SecureStorage.GetAsync("user_id");
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    Console.WriteLine("[ERROR] User ID is not available. Please login.");
+                    return; // Cannot proceed without a valid user ID
+                }
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("UserId", userId);
+
                 // HTTP GET request to fetch messages by room ID
                 var response = await _httpClient.GetAsync($"api/message/room_get_message/{_chatRoom.Id}");
                 if (response.IsSuccessStatusCode)
@@ -179,13 +185,11 @@ namespace ChatAppRum.ViewModel
                     if (messages != null)
                     {
                         // Clear the existing messages and reload from API
-                        Messages.Clear(); // Optionally clear existing messages
+                        Messages.Clear();
                         foreach (var message in messages)
                         {
-                            // Check if the message belongs to the current room
-                            //bool isSentFromCurrentRoom = message.IsFromCurrentRoom(_chatRoom.Id);
                             message.RoomName = _chatRoom.Name;
-                            Messages.Add(message); // Add all messages from the current room
+                            Messages.Add(message);
                         }
                     }
                 }
@@ -200,9 +204,9 @@ namespace ChatAppRum.ViewModel
             }
         }
 
+        // Method to Create a message using HTTP API____Fix
         private async void OnCreateMessage()
         {
-
             var messageText = MessageText;
 
             if (string.IsNullOrEmpty(messageText))
@@ -213,28 +217,30 @@ namespace ChatAppRum.ViewModel
 
             Console.WriteLine("[DOTNET] OnCreateMessage invoked.");
 
-            // var messageText = await Application.Current.MainPage.DisplayPromptAsync("Create Room", "Enter room name:");
-
-
             if (!string.IsNullOrEmpty(messageText))
             {
                 Console.WriteLine($"[DOTNET] Message input is not empty. Proceeding with message: {messageText}");
 
                 try
                 {
-                    // Retrieve the user email from SecureStorage
-                    //string userEmail = await SecureStorage.GetAsync("user_email");
+                    // Retrieve the user ID from SecureStorage
+                    string userId = await SecureStorage.GetAsync("user_id");
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        Console.WriteLine("[DEBUG] User ID not found in SecureStorage.");
+                        return;
+                    }
+
+                    // Retrieve the user's name from SecureStorage
                     string userName = await SecureStorage.GetAsync("user_name");
                     if (string.IsNullOrEmpty(userName))
                     {
-                        Console.WriteLine("[DEBUG] User email not found in SecureStorage.");
-                        //await _page.DisplayAlert("Error", "Unable to retrieve user email. Please log in again.", "OK");
-
+                        Console.WriteLine("[DEBUG] User name not found in SecureStorage.");
                         return;
                     }
+
                     // Retrieve the user's profile picture URL from SecureStorage
                     string userProfilePictureUrl = await SecureStorage.GetAsync("user_profile_picture");
-
                     if (string.IsNullOrEmpty(userProfilePictureUrl))
                     {
                         Console.WriteLine("[DEBUG] User profile picture not found in SecureStorage.");
@@ -246,38 +252,37 @@ namespace ChatAppRum.ViewModel
 
                     var newMessage = new Message
                     {
-                        //SenderName = "Emilie", // Hardcoded
-                        SenderName = userName,  // Use the usern from SecureStorage
+                        SenderName = userName,
                         UserProfilePicture = userProfilePictureUrl,
                         Text = messageText,
                         Timestamp = DateTime.Now.ToString("g"),
-                        RoomName = _chatRoom.Name, // Make sure RoomName is set to the current chat room
-                        RoomId = _chatRoom.Id // Use RoomId instead of RoomName, assuming _chatRoom.Id is the MongoDB RoomId
+                        RoomName = _chatRoom.Name, // Assigning room name to the message
+                        RoomId = _chatRoom.Id,     // Assigning room ID
+                        UserId = userId            // Assigning user ID
                     };
+
+                    // Set userId in headers
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Add("UserId", userId);
 
                     // Convert message to JSON and send HTTP POST request
                     var response = await _httpClient.PostAsJsonAsync($"api/message/room_post_message", newMessage);
                     if (response.IsSuccessStatusCode)
                     {
                         Console.WriteLine($"[DOTNET] Message successfully sent. Status code: {response.StatusCode}");
-                        //Messages.Add(newMessage);
-
+                        // Insert the new message into the collection in the main thread to reflect changes immediately
                         Device.BeginInvokeOnMainThread(() =>
                         {
                             Messages.Add(newMessage);
                         });
-
                     }
                     else
                     {
-                        //await _page.DisplayAlert("Error", $"Failed to create message. Server response: {response.ReasonPhrase}", "OK");
                         await Application.Current.MainPage.DisplayAlert("Error", $"Failed to create message. Server response: {response.ReasonPhrase}", "OK");
-
                     }
                 }
                 catch (Exception ex)
                 {
-                    //await _page.DisplayAlert("Error", $"Failed to create message: {ex.Message}", "OK");
                     await Application.Current.MainPage.DisplayAlert("Error", $"Failed to create message: {ex.Message}", "OK");
                 }
             }
@@ -286,6 +291,7 @@ namespace ChatAppRum.ViewModel
                 Console.WriteLine("[DOTNET] Message input is empty. No action taken.");
             }
         }
+
         // Method to update a message using HTTP API
         private async Task OnUpdateMessage(Message message)
         {
@@ -335,7 +341,7 @@ namespace ChatAppRum.ViewModel
             }
         }
 
-        // Method to delete a message using HTTP API
+        // Method to delete a message using HTTP API____Fix
         private async Task OnDeleteMessage(Message message)
         {
             if (message == null)
@@ -382,10 +388,23 @@ namespace ChatAppRum.ViewModel
 
             try
             {
-                Debug.WriteLine($"Attempting to get rooms");
+                Debug.WriteLine("Attempting to get rooms");
 
-                // Fetch the rooms
-                var response = await _httpClient.GetAsync($"api/Room/room_get");
+                // Get the UserId from SecureStorage or from wherever it is saved
+                string userId = await SecureStorage.GetAsync("user_id");
+                if (string.IsNullOrEmpty(userId))
+                {
+                    Debug.WriteLine("User ID not found. Please login again.");
+                    await Application.Current.MainPage.DisplayAlert("Error", "User ID not found. Please login again.", "OK");
+                    return;
+                }
+
+                // Set UserId in the headers
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("UserId", userId);
+
+                // Fetch the rooms, make sure to pass the userId as a query parameter
+                var response = await _httpClient.GetAsync($"api/Room/room_get?userId={userId}");
                 var responseBody = await response.Content.ReadAsStringAsync();
                 Debug.WriteLine($"API response: {responseBody}");
 
@@ -444,24 +463,24 @@ namespace ChatAppRum.ViewModel
                     Timestamp = DateTime.Now.ToString("g"),
                     RoomName = selectedRoomName,  // Use the selected room name
                     RoomId = selectedRoom.Id,      // Use the selected room's ID
-                    FromRoomName = _chatRoom.Name  // This is the room where the message was sent from
+                    FromRoomName = _chatRoom.Name, // This is the room where the message was sent from
+                    UserId = userId                // Make sure to assign the correct UserId
                 };
 
                 Debug.WriteLine($"Sending message to room: {selectedRoomName}, Room ID: {selectedRoom.Id}");
+
+                // Set UserId in the headers again just in case it's required for authorization in the message posting
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("UserId", userId);
 
                 // Send the message
                 var postResponse = await _httpClient.PostAsJsonAsync("api/message/room_post_message", newMessage);
                 if (postResponse.IsSuccessStatusCode)
                 {
-                    // Store the new message flag for the receiving room
-                    // This could be done via backend or any shared state
-                    //await StoreNewMessageFlag(selectedRoom.Id); // A function to store the flag
-
                     Debug.WriteLine("Message successfully sent.");
                     await Application.Current.MainPage.DisplayAlert("Message Sent", $"Message has been sent to {selectedRoomName}", "OK");
 
-
-                    /// Show a toast for the sent message
+                    // Show a toast for the sent message
                     Toast.Make($"Message sent to {selectedRoomName}", CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
 
                     // Now store the new message flag for the other room
@@ -480,24 +499,32 @@ namespace ChatAppRum.ViewModel
             }
         }
 
-
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
+        // Method to Attach a file
+        private void OnAttachFile()
         {
-
-                Console.WriteLine($"[DOTNET] OnPropertyChanged called for: {propertyName}");
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            // Show a toast for the sent message
+            //Toast.Make($"Message sent to {selectedRoomName}", CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
+            // Display the toast message to inform the user
+            Toast.Make("Sorry, you cannot upload any files now. There is no place where the files can be stored.",
+                       CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
         }
+
+        // Method to User Profil from login
         private async void InitializeUserProfilePicture()
         {
             // Fetching user profile picture from SecureStorage asynchronously
             var userProfile = await SecureStorage.GetAsync("user_profile_picture");
             UserProfilePicture = userProfile ?? "default_avatar.png"; // Set a default avatar if the picture isn't found
         }
-       
 
+        //  Allowing us to make change immediately
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+
+            Console.WriteLine($"[DOTNET] OnPropertyChanged called for: {propertyName}");
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
 }

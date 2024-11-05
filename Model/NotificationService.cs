@@ -20,6 +20,19 @@ namespace ChatAppRum.Model
         {
             try
             {
+                // Get userId from SecureStorage
+                var userId = await SecureStorage.GetAsync("user_id");
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    Console.WriteLine("[ERROR] User ID not available. Please login.");
+                    return;
+                }
+
+                // Set userId in the headers to authenticate the delete request
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("UserId", userId);
+
                 var response = await _httpClient.PostAsync($"api/notification/set_new_message_flag/{roomId}", null);
                 if (response.IsSuccessStatusCode)
                 {
@@ -41,6 +54,18 @@ namespace ChatAppRum.Model
         {
             try
             {
+                // Get userId from SecureStorage
+                var userId = await SecureStorage.GetAsync("user_id");
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    Console.WriteLine("[ERROR] User ID not available. Please login.");
+                    //return;
+                }
+
+                // Set userId in the headers to authenticate the delete request
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("UserId", userId);
                 var response = await _httpClient.GetAsync($"api/notification/check_new_message_flag/{roomId}");
                 if (response.IsSuccessStatusCode)
                 {
@@ -67,6 +92,18 @@ namespace ChatAppRum.Model
         {
             try
             {
+                // Get userId from SecureStorage
+                var userId = await SecureStorage.GetAsync("user_id");
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    Console.WriteLine("[ERROR] User ID not available. Please login.");
+                    return;
+                }
+
+                // Set userId in the headers to authenticate the delete request
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("UserId", userId);
                 var response = await _httpClient.PostAsync($"api/notification/clear_new_message_flag/{roomId}", null);
                 if (response.IsSuccessStatusCode)
                 {
