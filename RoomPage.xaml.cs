@@ -11,7 +11,8 @@ namespace ChatAppRum
         //private readonly HubConnection _hubConnection;
         private readonly IHttpClientFactory _httpClientFactory;
         private HttpClient _httpClient;
-
+        private string _userId; // Field to store the user ID
+        private RoomViewModel _roomViewModel; // RoomViewModel instance
         // Update constructor to accept IHttpClientFactory from Dependency Injection
         public RoomPage(/*HubConnection hubConnection,*/ IHttpClientFactory httpClientFactory)
         {
@@ -23,8 +24,17 @@ namespace ChatAppRum
             // Use the factory to create an HttpClient instance
             _httpClient = _httpClientFactory.CreateClient("ChatAPI");
 
-            // Pass HttpClient to ViewModel for dynamic room loading
-            BindingContext = new RoomViewModel(_httpClient);
+            // Initialize the RoomViewModel with an empty user ID for now
+            _roomViewModel = new RoomViewModel(_httpClient, string.Empty);
+            BindingContext = _roomViewModel;
+        }
+        // Method to set the user ID (called from MainPage after successful login)
+        public void SetUserId(string userId)
+        {
+            _userId = userId;
+
+            // Set the user ID in the ViewModel and load the rooms
+            _roomViewModel.SetUserIdAndLoadRooms(_userId);
         }
 
         // Add the OnRoomTapped event handler: it navigates to ChatRoomPage, where it shows all messages for the room you enter
@@ -47,5 +57,6 @@ namespace ChatAppRum
                 await Navigation.PushAsync(new MessagePage(selectedRoom, /*_hubConnection,*/ _httpClient));
             }
         }
+       
     }
 }
