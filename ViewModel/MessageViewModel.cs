@@ -1,7 +1,5 @@
 ﻿using ChatAppRum.Model;
 using ChatRumLibrary;
-using FunWithFlags_Library;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -19,23 +17,32 @@ namespace ChatAppRum.ViewModel
 {
     public class MessageViewModel : INotifyPropertyChanged
     {
-        private readonly HttpClient _httpClient;
-        private  Room _chatRoom;
+        //************************************************************* INITIAL VARIABLES ********************************************************************   1
 
-        private readonly NotificationService _notificationService;
+        private readonly HttpClient _httpClient;  // Define http to set ssl and security
+        private readonly NotificationService _notificationService;  // define notification to be in use here
+
+
+        // Variables will be Notified on Property Changed
+        private Room _chatRoom;
         private string _roomId;
         private string _userProfilePicture;
         private string _roomProfil;
         private string _roomName;
         private string _messageText;
+        public ObservableCollection<Message> Messages { get; set; }  // Collections of messages
 
-        private readonly ContentPage _page; // DisplayAlert, DisplayPromptAsync, and MessageInput do not exist in the current context.
 
-        // Delegate for DisplayPromptAsync
-        //public Func<string, string, string, Task<string>> DisplayPromptMessage { get; set; } // OnCreateMessage
-     
+        // Commands for Crud operations
         public Command CreateMessageCommand { get; }
-        
+        public Command<Message> UpdateMessageCommand => new Command<Message>(async (message) => await OnUpdateMessage(message));
+        public Command<Message> DeleteMessageCommand => new Command<Message>(async (message) => await OnDeleteMessage(message));
+        public Command<Message> SendToAnotherRoomCommand => new Command<Message>(async (message) => await OnSendToAnotherRoom(message));
+        public ICommand AttachFileCommand => new Command(OnAttachFile);
+
+
+
+        // Notify on Property Changed
         public string UserProfilePicture
         {
             get => _userProfilePicture;
@@ -48,7 +55,6 @@ namespace ChatAppRum.ViewModel
                 }
             }
         }
-
         public string RoomProfil
         {
             get => _roomProfil;
@@ -61,7 +67,6 @@ namespace ChatAppRum.ViewModel
                 }
             }
         }
-
         public string RoomName
         {
             get => _roomName;
@@ -74,7 +79,6 @@ namespace ChatAppRum.ViewModel
                 }
             }
         }
-
         public string RoomId
         {
             get => _roomId;
@@ -87,7 +91,6 @@ namespace ChatAppRum.ViewModel
                 }
             }
         }
-
         public string MessageText
         {
             get => _messageText;
@@ -101,65 +104,44 @@ namespace ChatAppRum.ViewModel
             }
         }
 
-        public ObservableCollection<Message> Messages { get; set; }
-
-        // Constructor
+        
+        //************************************************************* CONSTRUCTOR ********************************************************************   2
         public MessageViewModel(Room selectedRoom, HttpClient httpClient)
         {
-            if (selectedRoom == null)
+
+            if (selectedRoom == null) // Check first if the room is empty
             {
                 throw new ArgumentNullException(nameof(selectedRoom), "Selected room cannot be null.");
             }
             _chatRoom = selectedRoom;
-            RoomId = _chatRoom.Id;  // Assigning RoomId
-            //RoomId = selectedRoom.Id; // Get Room Id and pass it to room local Room ID
+            RoomId = _chatRoom.Id;  
             RoomName = selectedRoom.Name;
-            //RoomProfil = selectedRoom.ProfileImageRoom;
+           
             // Assign RoomProfile with null check and fallback
             RoomProfil = !string.IsNullOrEmpty(selectedRoom.ProfileImageRoom) ? selectedRoom.ProfileImageRoom : "default_room_avatar.png";
             Console.WriteLine($"[DEBUG] Room profile picture URL: {RoomProfil}");
 
             _httpClient = httpClient;
-            //_page = page; // Store the reference to the ContentPage
+            _httpClient = HttpClientUtility.GetHttpClient(); //bypass SSL certificate validation for development purposes
 
-            //Create the HttpClientHandler and bypass SSL certificate validation for development purposes
+            Messages = new ObservableCollection<Message>(); // Initialize Collection in constructor
 
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-            };
+            CreateMessageCommand = new Command(OnCreateMessage);   // Initialize commands
 
-            // Initialize HttpClient with the custom handler
-            _httpClient = new HttpClient(handler)
-            {
-                BaseAddress = new Uri($"http://{NetworkUtils.GlobalIPAddress()}:5000/")  // Using HTTP here
-            };
-            Messages = new ObservableCollection<Message>();
-            //MessagesCollection.ItemsSource = Messages;
-            // Initialize commands
-            CreateMessageCommand = new Command(OnCreateMessage);
-
-            // Notify about the initial property values
+            // Notify about the initial property values, the UI about the change.
             OnPropertyChanged(nameof(RoomName));
             OnPropertyChanged(nameof(RoomProfil));
             OnPropertyChanged(nameof(RoomId));
-            OnPropertyChanged(nameof(Messages)); // Notify the UI about the change.
+            OnPropertyChanged(nameof(Messages)); 
 
-            _notificationService = new NotificationService(_httpClient);
-
-            // Start the async initialization after the constructor
-            InitializeUserProfilePicture();
-
-            // Connect to load messages
-            LoadMessages();
+            _notificationService = new NotificationService(_httpClient); // //bypass SSL certificate in notification
+            InitializeUserProfilePicture();// Start the async initialization after the constructor
+            LoadMessages(); // load messages in every action
         }
 
-        // Commands for update and delete operations
-        public Command<Message> UpdateMessageCommand => new Command<Message>(async (message) => await OnUpdateMessage(message));
-        public Command<Message> DeleteMessageCommand => new Command<Message>(async (message) => await OnDeleteMessage(message));
-        public Command<Message> SendToAnotherRoomCommand => new Command<Message>(async (message) => await OnSendToAnotherRoom(message));
-        public ICommand AttachFileCommand => new Command(OnAttachFile);
 
+
+        //************************************************************* METHODS - CRUD ******************************************************************  3
         // Method to load messages using HTTP API
         public async Task LoadMessages()
         {
@@ -204,7 +186,7 @@ namespace ChatAppRum.ViewModel
             }
         }
 
-        // Method to Create a message using HTTP API____Fix
+        // Method to Create a message using HTTP API
         private async void OnCreateMessage()
         {
             var messageText = MessageText;
@@ -274,6 +256,7 @@ namespace ChatAppRum.ViewModel
                         Device.BeginInvokeOnMainThread(() =>
                         {
                             Messages.Add(newMessage);
+                            LoadMessages();
                         });
                     }
                     else
@@ -326,7 +309,12 @@ namespace ChatAppRum.ViewModel
                         var index = Messages.IndexOf(message);
                         if (index >= 0)
                         {
-                            Messages[index] = message;
+                            Device.BeginInvokeOnMainThread(() =>
+                            {
+                                Messages[index] = message;
+                                LoadMessages();
+                            });
+                            
                         }
                     }
                     else
@@ -341,7 +329,7 @@ namespace ChatAppRum.ViewModel
             }
         }
 
-        // Method to delete a message using HTTP API____Fix
+        // Method to delete a message using HTTP API
         private async Task OnDeleteMessage(Message message)
         {
             if (message == null)
@@ -360,8 +348,12 @@ namespace ChatAppRum.ViewModel
                     var response = await _httpClient.DeleteAsync($"api/message/room_delete_message/{message.Id}");
                     if (response.IsSuccessStatusCode)
                     {
-                        Messages.Remove(message);
-                        Console.WriteLine("[DOTNET] Message removed from local collection.");
+                        Device.BeginInvokeOnMainThread(() =>
+                        {
+                            Messages.Remove(message);
+                            LoadMessages();
+                            Console.WriteLine("[DOTNET] Message removed from local collection.");
+                        });
                     }
                     else
                     {
@@ -373,6 +365,28 @@ namespace ChatAppRum.ViewModel
                     await Application.Current.MainPage.DisplayAlert("Error", $"Failed to delete message: {ex.Message}", "OK");
                 }
             }
+        }
+
+        
+
+
+        //************************************************************* METHODS - EXTRA ******************************************************************  4
+        // Method to Attach a file
+        private void OnAttachFile()
+        {
+            // Show a toast for the sent message
+            //Toast.Make($"Message sent to {selectedRoomName}", CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
+            // Display the toast message to inform the user
+            Toast.Make("Sorry, you cannot upload any files now. There is no place where the files can be stored.",
+                       CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
+        }
+
+        // Method to User Profil from login
+        private async void InitializeUserProfilePicture()
+        {
+            // Fetching user profile picture from SecureStorage asynchronously
+            var userProfile = await SecureStorage.GetAsync("user_profile_picture");
+            UserProfilePicture = userProfile ?? "default_avatar.png"; // Set a default avatar if the picture isn't found
         }
 
         // Method to send a message to another room
@@ -499,23 +513,6 @@ namespace ChatAppRum.ViewModel
             }
         }
 
-        // Method to Attach a file
-        private void OnAttachFile()
-        {
-            // Show a toast for the sent message
-            //Toast.Make($"Message sent to {selectedRoomName}", CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
-            // Display the toast message to inform the user
-            Toast.Make("Sorry, you cannot upload any files now. There is no place where the files can be stored.",
-                       CommunityToolkit.Maui.Core.ToastDuration.Long, 30).Show();
-        }
-
-        // Method to User Profil from login
-        private async void InitializeUserProfilePicture()
-        {
-            // Fetching user profile picture from SecureStorage asynchronously
-            var userProfile = await SecureStorage.GetAsync("user_profile_picture");
-            UserProfilePicture = userProfile ?? "default_avatar.png"; // Set a default avatar if the picture isn't found
-        }
 
         //  Allowing us to make change immediately
         public event PropertyChangedEventHandler PropertyChanged;

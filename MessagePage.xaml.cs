@@ -7,7 +7,6 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Linq;
 using ChatRumLibrary;
-using FunWithFlags_Library;
 using System.Diagnostics;
 using CommunityToolkit.Maui.Alerts;
 using ChatAppRum.ViewModel;

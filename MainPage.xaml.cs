@@ -8,7 +8,6 @@ using Microsoft.Maui.Storage; // Required for SecureStorage
 using Microsoft.Extensions.DependencyInjection;
 using ChatRumLibrary;
 using System.Net.Http.Json;
-using FunWithFlags_Library;
 
 namespace ChatAppRum
 {

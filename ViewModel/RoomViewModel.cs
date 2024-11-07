@@ -1,6 +1,5 @@
 ﻿using ChatAppRum.Model;
 using ChatRumLibrary;
-using FunWithFlags_Library;
 using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
@@ -15,17 +14,24 @@ namespace ChatAppRum.ViewModel
 {
     public class RoomViewModel : INotifyPropertyChanged
     {
-        private readonly HttpClient _httpClient;
-        private string _userProfilePicture;
-        private string _userId; // Field to store the user ID
-        private bool _isRefreshing;
+        //************************************************************* INITIAL VARIABLES ********************************************************************   1
 
-        public ObservableCollection<Room> Rooms { get; set; }
+        private readonly HttpClient _httpClient;  // Define http to set ssl and security
+
+        // Variables will be Notified on Property Changed
+        private string _userProfilePicture;
+        private string _userId; 
+        private bool _isRefreshing;
+        public ObservableCollection<Room> Rooms { get; set; }  // Collections of rooms
+
+        // Commands for Crud operations
         public ICommand RefreshCommand { get; }
         public ICommand CreateRoomCommand { get; }
         public ICommand UpdateRoomCommand { get; }
         public ICommand DeleteRoomCommand { get; }
 
+
+        // Notify on Property Changed
         public string UserProfilePicture
         {
             get => _userProfilePicture;
@@ -38,7 +44,6 @@ namespace ChatAppRum.ViewModel
                 }
             }
         }
-
         public bool IsRefreshing
         {
             get => _isRefreshing;
@@ -52,22 +57,14 @@ namespace ChatAppRum.ViewModel
             }
         }
 
+
+        //************************************************************* CONSTRUCTOR **************************************************************************   2
         public RoomViewModel(HttpClient httpClient, string userId)
         {
             _httpClient = httpClient;
             _userId = userId; // Set the user ID
-            //Create the HttpClientHandler and bypass SSL certificate validation for development purposes
-
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-            };
-
-            // Initialize HttpClient with the custom handler
-            _httpClient = new HttpClient(handler)
-            {
-                BaseAddress = new Uri($"http://{NetworkUtils.GlobalIPAddress()}:5000/")  // Using HTTP here
-            };
+            _httpClient = HttpClientUtility.GetHttpClient(); //bypass SSL certificate validation for development purposes
+          
 
             // Commands for update and delete operations
             Rooms = new ObservableCollection<Room>();
@@ -76,17 +73,14 @@ namespace ChatAppRum.ViewModel
             UpdateRoomCommand = new Command<Room>(OnUpdateRoom);
             DeleteRoomCommand = new Command<Room>(OnDeleteRoom);
 
-            // Start the async initialization after the constructor
-            InitializeUserProfilePicture();
-
+            
+            InitializeUserProfilePicture(); // Start the async initialization after the constructor
             LoadRooms(); // Load all rooms in everytime is going to Room Page
         }
-        // Optional method to set userId after constructor
-        public void SetUserIdAndLoadRooms(string userId)
-        {
-            _userId = userId;
-            LoadRooms(); // Load rooms for this user
-        }
+
+
+
+        //************************************************************* METHODS - CRUD *************************************************************************  3
 
         // Method to load chat rooms from the HTTP API
         private async void LoadRooms()
@@ -156,14 +150,7 @@ namespace ChatAppRum.ViewModel
                 IsRefreshing = false; // Mark refresh as complete
             }
         }
-        // Refresh method to reload chat rooms
-        private async Task OnRefresh()
-        {
-            IsRefreshing = true; // Start refresh indicator
-            // Reload chat rooms when manually refreshed
-            LoadRooms();
-        }
-
+        
         // Method to create a new chat room using HTTP API
         private async Task OnCreateRoomAsync()
         {
@@ -223,32 +210,7 @@ namespace ChatAppRum.ViewModel
                 }
             }
         }
-
-        // Helper method to update the user's room list in MongoDB
-        private async Task UpdateUserRoomListAsync(string userId, string roomId)
-        {
-            try
-            {
-                // Prepare request data
-                var updateData = new { RoomId = roomId };
-
-                // Send HTTP PATCH request to update the user's RoomIds list
-                var response = await _httpClient.PatchAsync($"api/User/{userId}/addRoom", JsonContent.Create(updateData));
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("[DOTNET] User's room list updated successfully.");
-                }
-                else
-                {
-                    Console.WriteLine($"[ERROR] Failed to update user's room list. Server response: {response.ReasonPhrase}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] Failed to update user's room list: {ex.Message}");
-            }
-        }
+        
         // Method to update a room using HTTP API
         private async void OnUpdateRoom(Room room)
         {
@@ -339,6 +301,52 @@ namespace ChatAppRum.ViewModel
                 {
                     Console.WriteLine($"[ERROR] Failed to delete room: {ex.Message}");
                 }
+            }
+        }
+
+
+
+
+        //************************************************************* METHODS - EXTRA *************************************************************************  4
+
+        // Optional method to set userId after constructor
+        public void SetUserIdAndLoadRooms(string userId)
+        {
+            _userId = userId;
+            LoadRooms(); // Load rooms for this user
+        }
+
+        // Refresh method to reload chat rooms
+        private async Task OnRefresh()
+        {
+            IsRefreshing = true; // Start refresh indicator
+            // Reload chat rooms when manually refreshed
+            LoadRooms();
+        }
+
+        // Helper method to update the user's room list in MongoDB
+        private async Task UpdateUserRoomListAsync(string userId, string roomId)
+        {
+            try
+            {
+                // Prepare request data
+                var updateData = new { RoomId = roomId };
+
+                // Send HTTP PATCH request to update the user's RoomIds list
+                var response = await _httpClient.PatchAsync($"api/User/{userId}/addRoom", JsonContent.Create(updateData));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("[DOTNET] User's room list updated successfully.");
+                }
+                else
+                {
+                    Console.WriteLine($"[ERROR] Failed to update user's room list. Server response: {response.ReasonPhrase}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to update user's room list: {ex.Message}");
             }
         }
 

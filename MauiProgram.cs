@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.SignalR.Client;  // Add this to use SignalR client
 using Microsoft.Extensions.DependencyInjection;
 using ChatAppRum.Model;
 using ChatRumDataAccess;
-using FunWithFlags_Library;
 using ChatAppRum.ViewModel;
 using CommunityToolkit.Maui;
+using ChatRumLibrary;
 namespace ChatAppRum
 {
     public static class MauiProgram
